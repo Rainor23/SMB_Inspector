@@ -54,10 +54,14 @@ sids_dict = {
     "S-1-5-11": "Authenticated Users",
 }
 
+files_dict = {
+
+}
+
 # Shares that are pulled from listShares()
 found_shares = []
 found_directories = []
-found_directories_swap = []
+dangerous_files = []
 found_files = []
 path_root = "/"
 
@@ -70,14 +74,61 @@ def file_permissions(connection, share, path=None):
     info = connection.getSecurity(share, path)
     return info
 
-def search_dangerous_perms(file, path):
+def search_dangerous_perms(file, path, full_path):
+    global dangerous_files
     for perm in file.dacl.aces:
         if str(perm.sid) in sids_dict.keys():
             access = hex(perm.mask)[2:].upper()
             if access in permis_dict.keys():
-                print(f"{RED}Permissions - {sids_dict[str(perm.sid)]}. Object - {path}. Access- {permis_dict[access]}{END}")
+                # print(f"{RED}Permissions - {sids_dict[str(perm.sid)]}. Object - {path}. Access - {permis_dict[access]}{END}")
+                #dangerous_files.append[file]
+                files_dict[full_path] = access
         else:
             pass
+
+def list_dangerous():
+    print (f"\n{BLUE}Scan Complete. Dumping dangerous files...  {END}")
+    print (f"--------------------------------")
+    for k,v in files_dict.items():
+        print (f'{RED}File {k}, Permission: {permis_dict[v]}{END}')
+        #print(f"{RED}Permissions - {sids_dict[str(perm.sid)]}. Object - {path}. Access - {permis_dict[access]}")
+
+def list_interesting():
+    global found_files
+    print (f"\n{BLUE}Scan Complete. Dumping interesting files...  {END}")
+    print (f"--------------------------------")
+    for file in found_files:
+        print(f'{GREEN}{file}{END}')
+
+def recursive_search(connection, share, dir):
+    sub_dir = []
+    global found_files
+    files = share_connect(connection, share.name, dir)
+    print (f"\n{YELLOW}Listing {share.name}{dir}... {END}")
+    print (f"--------------------------------")
+    for f in files:
+        full_path = share.name + os.path.join(dir,f.filename)
+        search_interesting_extensions(full_path)
+        if f.filename not in (".", ".."):
+            if f.isDirectory:
+                file_sec = connection.getSecurity(f"{share.name}", f"{dir}/{f.filename}")
+                search_dangerous_perms(file_sec, f.filename, full_path)
+                sub_dir.append(os.path.join(dir,f.filename))
+                print (f"Directory - {f.filename}")
+            else:
+                file_sec = connection.getSecurity(f"{share.name}", f"{dir}/{f.filename}")
+                search_dangerous_perms(file_sec, f.filename, full_path)
+                print (f"File - {dir}/{f.filename}")
+    for sub in sub_dir:            
+        recursive_search(connection, share, sub)
+
+def search_interesting_extensions(file):
+    dangerous_file_extensions = ['.ps1', '.bat', '.cmd', '.sh', '.vbs', '.js', '.jar', '.py', '.com', '.pif', '.vb', '.scr', '.ws', '.wsh', '.msc',  '.reg', '.jar', '.app', '.ade', '.adp', '.lnk']
+    sensitive_file_extensions = ['.doc', '.docx', '.xls', '.xlsx', '.pdf', '.txt', '.csv', '.log', '.xml', '.json', '.sql', '.config', '.ini', '.env', '.key', '.pem', '.cer', '.pfx', '.p12', '.private', '.pub', '.ssh', '.backup', '.bak', '.db', '.mdb', '.sqlite', '.dbf', '.csv']
+    all_dangerous_extensions = dangerous_file_extensions + sensitive_file_extensions
+    extension = '.' + file.split('.')[-1].lower()
+    if extension in all_dangerous_extensions:
+        found_files.append(file)
 
 class share_info:
     _share_classes = []
@@ -86,6 +137,7 @@ class share_info:
         self.name = name
         self.dirs = []
         self.files = [files]
+        self.interesting_files = []
         self._share_classes.append(self)
 
 # List shares found on the remote host
@@ -113,6 +165,7 @@ def list_shares(connection):
 # List files found on shares.
 def list_files(connection, share):
     global path_root
+    global found_files
     class_instance = share
     try:
         files = share_connect(connection, share.name, path_root)
@@ -121,26 +174,35 @@ def list_files(connection, share):
                 if f.isDirectory:
                     class_instance.dirs.append(path_root + f.filename)
                 else:
+                    print (f"\n{YELLOW}Listing {share.name}... {END}")
+                    print (f"--------------------------------")
                     print (f"File - {f.filename}")
 
         if class_instance.dirs == "":
             pass
         else:
             for p in class_instance.dirs:
+                sub_dir = []
+                share.name 
                 path = os.path.join(share.name, p)
                 files = share_connect(connection, share.name, p)
-                print (f"\n{YELLOW}Connected to {share.name}{path} {END}")
+                print (f"\n{YELLOW}Listing {share.name}{path}... {END}")
                 print (f"--------------------------------")
                 for f in files:
+                    full_path = share.name + os.path.join(path,f.filename)
                     if f.filename not in (".", ".."):
+                        search_interesting_extensions(full_path)
                         if f.isDirectory:
                             file_sec = connection.getSecurity(f"{share.name}", f"{path}/{f.filename}")
-                            search_dangerous_perms(file_sec, f.filename)
+                            search_dangerous_perms(file_sec, f.filename, full_path)
+                            sub_dir.append(os.path.join(p,f.filename))
                             print (f"Directory - {f.filename}")
                         else:
                             file_sec = connection.getSecurity(f"{share.name}", f"{path}/{f.filename}")
-                            search_dangerous_perms(file_sec, f.filename)
+                            search_dangerous_perms(file_sec, f.filename, full_path)
                             print (f"File - {p}/{f.filename}")
+            for sub in sub_dir:
+                recursive_search(connection, share, sub)
 
     except smb.SessionError as e:
         print(f"SMB SessionError: {e.getErrorCode()}")
@@ -189,9 +251,9 @@ def main():
         for share_instance in share_info._share_classes:
             print(f"\n{YELLOW}Connecting to {share_instance.name} {END}")
             list_files(con, share_instance)
-
-        # perms = file_permissions(con, "TestShare", "/IT/Nothing.txt")
-        # search_dangerous_perms(perms)
+        
+        list_dangerous()
+        list_interesting()
 
     except Exception as e:
          print("Failed to connect or list files\nReason: " + str(e))
