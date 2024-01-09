@@ -6,6 +6,7 @@ import argparse
 import os
 from nmb.NetBIOS import NetBIOS
 import array
+import re
 
 # Defining Colours
 RED = '\033[91m'
@@ -64,6 +65,12 @@ found_directories = []
 dangerous_files = []
 found_files = []
 path_root = "/"
+hosts = []
+
+def read_target(target):
+    with open(target, "r") as target:
+        for line in target:
+            hosts.append(line.strip("\n''"))
 
 # Function to connect to share and path
 def share_connect(connection, share, path=None):
@@ -80,8 +87,6 @@ def search_dangerous_perms(file, path, full_path):
         if str(perm.sid) in sids_dict.keys():
             access = hex(perm.mask)[2:].upper()
             if access in permis_dict.keys():
-                # print(f"{RED}Permissions - {sids_dict[str(perm.sid)]}. Object - {path}. Access - {permis_dict[access]}{END}")
-                #dangerous_files.append[file]
                 files_dict[full_path] = access
         else:
             pass
@@ -91,7 +96,6 @@ def list_dangerous():
     print (f"--------------------------------")
     for k,v in files_dict.items():
         print (f'{RED}File {k}, Permission: {permis_dict[v]}{END}')
-        #print(f"{RED}Permissions - {sids_dict[str(perm.sid)]}. Object - {path}. Access - {permis_dict[access]}")
 
 def list_interesting():
     global found_files
@@ -213,9 +217,10 @@ def list_files(connection, share):
 
 def main():
     parser = argparse.ArgumentParser(description="SMB Recursive File List Script")
-    parser.add_argument('-i', '--ip', dest='ip', required=True, help="Target SMB server IP address")
-    parser.add_argument('-u', '--username', dest='username', required=True, help="Target SMB username")
-    parser.add_argument('-p', '--password', dest='password', required=True, help="Target SMB user password")
+    parser.add_argument('-i', '--ip', dest='ip', required=False, default=None, help="Target SMB server IP address.")
+    parser.add_argument('-t', '--target-file', dest='target', required=False, default=None, help="Target file for scanning multiple hosts.")
+    parser.add_argument('-u', '--username', dest='username', required=True, help="Target SMB username.")
+    parser.add_argument('-p', '--password', dest='password', required=True, help="Target SMB user password.")
     parser.add_argument('-v', '--verbose', dest='verbose', required=False, default=False, action=argparse.BooleanOptionalAction, help='This option will enable the program to be more or less verbose.')
     parser.add_argument('-s', '--share', dest='share', required=False, default=False, help='SMB share name')
 
@@ -224,39 +229,56 @@ def main():
     if args.verbose:
         print("[DEBUG] Username: " + args.username)
         print("[DEBUG] Password: " + args.password)
-        print("[DEBUG] IP Address: " + args.ip)
+        # print("[DEBUG] IP Address: " + args.ip)
 
     con = None # Reset connection
 
-    try:
-        con = SMBConnection(args.username, args.password, 'Client', args.ip, is_direct_tcp=True)
-        con.connect(args.ip, 445)
-        netbios = NetBIOS()
-        server_name = netbios.queryIPForName(args.ip, timeout=5000)  # Timeout is in milliseconds
-        print(f"Connected to - {str(server_name).strip('[]''')}")
-        # server_domain = con.getServerDomain()
+    if args.ip is None and args.target is None:
+        print ("Either an IP or target file must be provided! See help for more information")
+    elif args.ip is not None and args.target is not None:
+        print ("Either an IP or target file must be provided! You cannot use both simulatiously! See help for more information")
+    elif args.ip is not None:
+        try:
+            con = SMBConnection(args.username, args.password, 'Client', args.ip, is_direct_tcp=True)
+            con.connect(args.ip, 445)
+            netbios = NetBIOS()
+            server_name = netbios.queryIPForName(args.ip, timeout=5000)  # Timeout is in milliseconds
+            print(f"Connected to - {YELLOW}{str(server_name).strip('[]''')}{END}")
+            list_shares(con)
+            for share_instance in share_info._share_classes:
+                print(f"\n{YELLOW}Connecting to {share_instance.name} {END}")
+                print(f"\n{YELLOW}==========================================={END}")
+                list_files(con, share_instance)    
+            list_dangerous()
+            list_interesting()
 
-        # server_os = con.getServerOS()
+        except Exception as e:
+            print("Failed to connect or list files\nReason: " + str(e))
 
 
-#         print(f"""Connected to \\\\{args.ip} 
-# Look to get these working again with impacket
-# Server Information: 
-# Server Name: {server_name}
-# Server OS: {server_os} 
-# Server Domain: {server_domain} (If blank - no domain)
-#          """)
+    elif args.target is not None:
+        global hosts
+        try:
+            read_target(args.target)
+            for host in hosts:
+                if re.compile(r'^(\d{1,3}\.){3}\d{1,3}$').match(host):
+                    con = SMBConnection(args.username, args.password, 'Client', host, is_direct_tcp=True)
+                    con.connect(host, 445)
+                    netbios = NetBIOS()
+                    server_name = netbios.queryIPForName(host, timeout=5000)  # Timeout is in milliseconds
+                    print(f"Connected to - {YELLOW}{str(server_name).strip('[]''')}{END}")
+                    list_shares(con)
+                    for share_instance in share_info._share_classes:
+                        print(f"\n{YELLOW}Connecting to {share_instance.name} {END}")
+                        print(f"\n{YELLOW}==========================================={END}")
+                        list_files(con, share_instance)    
+                    list_dangerous()
+                    list_interesting()
+                else:
+                    print(f"\n{YELLOW}{host} is not a valid IP address... SKIPPING! {END}")
 
-        list_shares(con)
-        for share_instance in share_info._share_classes:
-            print(f"\n{YELLOW}Connecting to {share_instance.name} {END}")
-            list_files(con, share_instance)
-        
-        list_dangerous()
-        list_interesting()
-
-    except Exception as e:
-         print("Failed to connect or list files\nReason: " + str(e))
+        except Exception as e:
+            print("Failed to connect or list files\nReason: " + str(e))
 
 if __name__ == "__main__":
     main()
