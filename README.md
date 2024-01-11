@@ -9,6 +9,7 @@ SMB Inspector!
 Disclaimer.
 This tool should only be used on networks that you have authorisation to scan. It is illegal to scan networks without authorisation, and I will not be help responsible for your use of this tool.
 
+This tool is still in active development and I would probably not recommend using it unless it is for a CTF.
 
 TODO:
 Use Threads for Async tasks. e,g, each host has its own thread.
