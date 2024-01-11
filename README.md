@@ -1,5 +1,5 @@
 
-![logo](/Images/logo.png)
+![logo](https://github.com/Rainor23/smb_inspector/assets/45594693/76ca4544-6037-4bba-870d-30862ad8ec03)
 
 SMB Inspector!
 
