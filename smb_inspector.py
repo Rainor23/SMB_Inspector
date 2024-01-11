@@ -1,4 +1,3 @@
-#from impacket.smbconnection import SMBConnection
 from smb.SMBConnection import SMBConnection
 from smb.security_descriptors import ACE_TYPE_ACCESS_ALLOWED, ACE_TYPE_ACCESS_DENIED, SID_CREATOR_OWNER, SID_CREATOR_GROUP
 from impacket import smb
@@ -7,6 +6,9 @@ import os
 from nmb.NetBIOS import NetBIOS
 import array
 import re
+from netaddr import *
+import socket
+
 
 # Defining Colours
 RED = '\033[91m'
@@ -60,6 +62,7 @@ files_dict = {
 }
 
 # Shares that are pulled from listShares()
+#===========================================
 found_shares = []
 found_directories = []
 dangerous_files = []
@@ -67,20 +70,35 @@ found_files = []
 path_root = "/"
 hosts = []
 
+
+
+# Read Target list
+#===========================================
 def read_target(target):
     with open(target, "r") as target:
         for line in target:
             hosts.append(line.strip("\n''"))
 
+
+
 # Function to connect to share and path
+#===========================================
 def share_connect(connection, share, path=None):
     files = connection.listPath(share, path)
     return files
 
+
+
+# Obtain file permissions
+#===========================================
 def file_permissions(connection, share, path=None):
     info = connection.getSecurity(share, path)
     return info
 
+
+
+# Search files for dangerous permissions
+#===========================================
 def search_dangerous_perms(file, path, full_path):
     global dangerous_files
     for perm in file.dacl.aces:
@@ -91,6 +109,10 @@ def search_dangerous_perms(file, path, full_path):
         else:
             pass
 
+
+
+# Dump all dangerous files
+#===========================================
 def list_dangerous():
     print (f"\n{BLUE}Scan Complete. Dumping dangerous files...  {END}")
     print (f"--------------------------------")
@@ -217,8 +239,10 @@ def list_files(connection, share):
 
 def main():
     parser = argparse.ArgumentParser(description="SMB Recursive File List Script")
-    parser.add_argument('-i', '--ip', dest='ip', required=False, default=None, help="Target SMB server IP address.")
-    parser.add_argument('-t', '--target-file', dest='target', required=False, default=None, help="Target file for scanning multiple hosts.")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-i', '--ip', dest='ip', required=False, default=None, help="Target SMB server IP address.")
+    group.add_argument('-t', '--target-file', dest='target', required=False, default=None, help="Target file for scanning multiple hosts.")
+    group.add_argument('-r', '--range', dest='range', required=False, help="target SMB CIDR range.")
     parser.add_argument('-u', '--username', dest='username', required=True, help="Target SMB username.")
     parser.add_argument('-p', '--password', dest='password', required=True, help="Target SMB user password.")
     parser.add_argument('-v', '--verbose', dest='verbose', required=False, default=False, action=argparse.BooleanOptionalAction, help='This option will enable the program to be more or less verbose.')
@@ -233,11 +257,7 @@ def main():
 
     con = None # Reset connection
 
-    if args.ip is None and args.target is None:
-        print ("Either an IP or target file must be provided! See help for more information")
-    elif args.ip is not None and args.target is not None:
-        print ("Either an IP or target file must be provided! You cannot use both simulatiously! See help for more information")
-    elif args.ip is not None:
+    if args.ip:
         try:
             con = SMBConnection(args.username, args.password, 'Client', args.ip, is_direct_tcp=True)
             con.connect(args.ip, 445)
@@ -255,13 +275,12 @@ def main():
         except Exception as e:
             print("Failed to connect or list files\nReason: " + str(e))
 
-
-    elif args.target is not None:
+    elif args.target:
         global hosts
         try:
             read_target(args.target)
             for host in hosts:
-                if re.compile(r'^(\d{1,3}\.){3}\d{1,3}$').match(host):
+                if valid_ipv4(host) or valid_ipv6(host) :
                     con = SMBConnection(args.username, args.password, 'Client', host, is_direct_tcp=True)
                     con.connect(host, 445)
                     netbios = NetBIOS()
@@ -271,7 +290,7 @@ def main():
                     for share_instance in share_info._share_classes:
                         print(f"\n{YELLOW}Connecting to {share_instance.name} {END}")
                         print(f"\n{YELLOW}==========================================={END}")
-                        list_files(con, share_instance)    
+                        list_files(con, share_instance)
                     list_dangerous()
                     list_interesting()
                 else:
@@ -280,5 +299,19 @@ def main():
         except Exception as e:
             print("Failed to connect or list files\nReason: " + str(e))
 
+    elif args.range:
+        for ip in IPNetwork(IPNetwork(args.range)):
+            #tbc
+            pass
+        print("Functionality in production")
+
 if __name__ == "__main__":
     main()
+
+
+'''
+TODO: 
+Add CIDR range scanning functionality.
+Add CSV formatted output per host.clear
+
+'''
