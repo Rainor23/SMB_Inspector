@@ -9,6 +9,7 @@ import re
 from netaddr import *
 import socket
 import getpass
+import csv_parser
 
 header = '''
   ___ __  __ ___   ___ _  _ ___ ___ ___ ___ _____ ___  ___      
@@ -122,6 +123,7 @@ def search_dangerous_perms(file, path, full_path):
             access = hex(perm.mask)[2:].upper()
             if access in permis_dict.keys():
                 files_dict[full_path] = access
+                dangerous_files.append(full_path)
         else:
             pass
 
@@ -313,6 +315,8 @@ def main():
                 list_files(con, share_instance)    
             list_dangerous()
             list_interesting()
+            csv_parser.write_output(args.ip, found_files, dangerous_files)
+            
 
         except Exception as e:
             print("Failed to connect or list files\nReason: " + str(e))
