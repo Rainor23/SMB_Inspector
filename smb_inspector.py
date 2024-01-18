@@ -10,6 +10,15 @@ from netaddr import *
 import socket
 import getpass
 
+header = '''
+  ___ __  __ ___   ___ _  _ ___ ___ ___ ___ _____ ___  ___      
+ / __|  \/  | _ ) |_ _| \| / __| _ \ __/ __|_   _/ _ \| _ \\   
+ \__ \ |\/| | _ \  | || .` \__ \  _/ _| (__  | || (_) |   /      
+ |___/_|  |_|___/ |___|_|\_|___/_| |___\___| |_| \___/|_|_\\     
+                                                           
+By Rainerd0x21
+
+'''
 
 # Defining Colours
 RED = '\033[91m'
@@ -127,6 +136,7 @@ def list_dangerous():
         print (f'{RED}File {k}, Permission: {permis_dict[v]}{END}')
 
 
+
 # Dump all interesting files based on the interesting file extensions selected
 #===========================================
 def list_interesting():
@@ -135,6 +145,7 @@ def list_interesting():
     print (f"--------------------------------")
     for file in found_files:
         print(f'{GREEN}{file}{END}')
+
 
 
 # Recursively search smb shares
@@ -162,6 +173,7 @@ def recursive_search(connection, share, dir):
         recursive_search(connection, share, sub)
 
 
+
 # List of all file extensions to look for
 #===========================================
 def search_interesting_extensions(file):
@@ -171,6 +183,7 @@ def search_interesting_extensions(file):
     extension = '.' + file.split('.')[-1].lower()
     if extension in all_dangerous_extensions:
         found_files.append(file)
+
 
 
 # Initial share class. This will create a class for all shares found. Allowing them to have their own data structure.
@@ -184,6 +197,7 @@ class share_info:
         self.files = [files]
         self.interesting_files = []
         self._share_classes.append(self)
+
 
 
 # List shares found on the remote host
@@ -209,6 +223,7 @@ def list_shares(connection):
     except Exception as e:
         print(f"Failed to list shares\nReason: {str(e)}")
     
+
 
 # List files found on the remote host
 #===========================================
@@ -281,6 +296,8 @@ def main():
         password = hidden_pass()
     else:
         password = args.password
+
+    print(header)
     
     if args.ip:
         try:
@@ -332,7 +349,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 
 '''
 TODO: 
