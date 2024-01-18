@@ -13,7 +13,8 @@ This tool is still in active development and I would probably not recommend usin
 
 Example Scan
 
-![image](https://github.com/Rainor23/SMB_Inspector/assets/45594693/9cd1555d-60ef-46bb-9881-35a7b9cc3f97)
+![image](https://github.com/Rainor23/SMB_Inspector/assets/45594693/113a89c6-6077-4e80-86fc-efa248f4f07b)
+
 
 ..............
 
