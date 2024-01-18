@@ -8,6 +8,7 @@ import array
 import re
 from netaddr import *
 import socket
+import getpass
 
 
 # Defining Colours
@@ -60,6 +61,12 @@ sids_dict = {
 files_dict = {
 
 }
+
+# Makes sure that your password is not saved to terminal so that it cannot be seen in the history file.
+#===========================================
+def hidden_pass():
+    password = getpass.getpass(prompt="Enter Password ")
+    return password
 
 # Shares that are pulled from listShares()
 #===========================================
@@ -119,6 +126,9 @@ def list_dangerous():
     for k,v in files_dict.items():
         print (f'{RED}File {k}, Permission: {permis_dict[v]}{END}')
 
+
+# Dump all interesting files based on the interesting file extensions selected
+#===========================================
 def list_interesting():
     global found_files
     print (f"\n{BLUE}Scan Complete. Dumping interesting files...  {END}")
@@ -126,6 +136,9 @@ def list_interesting():
     for file in found_files:
         print(f'{GREEN}{file}{END}')
 
+
+# Recursively search smb shares
+#===========================================
 def recursive_search(connection, share, dir):
     sub_dir = []
     global found_files
@@ -148,6 +161,9 @@ def recursive_search(connection, share, dir):
     for sub in sub_dir:            
         recursive_search(connection, share, sub)
 
+
+# List of all file extensions to look for
+#===========================================
 def search_interesting_extensions(file):
     dangerous_file_extensions = ['.ps1', '.bat', '.cmd', '.sh', '.vbs', '.js', '.jar', '.py', '.com', '.pif', '.vb', '.scr', '.ws', '.wsh', '.msc',  '.reg', '.jar', '.app', '.ade', '.adp', '.lnk']
     sensitive_file_extensions = ['.doc', '.docx', '.xls', '.xlsx', '.pdf', '.txt', '.csv', '.log', '.xml', '.json', '.sql', '.config', '.ini', '.env', '.key', '.pem', '.cer', '.pfx', '.p12', '.private', '.pub', '.ssh', '.backup', '.bak', '.db', '.mdb', '.sqlite', '.dbf', '.csv']
@@ -156,6 +172,9 @@ def search_interesting_extensions(file):
     if extension in all_dangerous_extensions:
         found_files.append(file)
 
+
+# Initial share class. This will create a class for all shares found. Allowing them to have their own data structure.
+#===========================================
 class share_info:
     _share_classes = []
 
@@ -166,7 +185,9 @@ class share_info:
         self.interesting_files = []
         self._share_classes.append(self)
 
+
 # List shares found on the remote host
+#===========================================
 def list_shares(connection):
     global found_shares
     share_ = "Share_" 
@@ -188,7 +209,9 @@ def list_shares(connection):
     except Exception as e:
         print(f"Failed to list shares\nReason: {str(e)}")
     
-# List files found on shares.
+
+# List files found on the remote host
+#===========================================
 def list_files(connection, share):
     global path_root
     global found_files
@@ -240,26 +263,28 @@ def list_files(connection, share):
 def main():
     parser = argparse.ArgumentParser(description="SMB Recursive File List Script")
     group = parser.add_mutually_exclusive_group()
+    passwords = parser.add_mutually_exclusive_group()
     group.add_argument('-i', '--ip', dest='ip', required=False, default=None, help="Target SMB server IP address.")
     group.add_argument('-t', '--target-file', dest='target', required=False, default=None, help="Target file for scanning multiple hosts.")
     group.add_argument('-r', '--range', dest='range', required=False, help="target SMB CIDR range.")
     parser.add_argument('-u', '--username', dest='username', required=True, help="Target SMB username.")
-    parser.add_argument('-p', '--password', dest='password', required=True, help="Target SMB user password.")
-    parser.add_argument('-v', '--verbose', dest='verbose', required=False, default=False, action=argparse.BooleanOptionalAction, help='This option will enable the program to be more or less verbose.')
+    passwords.add_argument('-p', '--password', dest='password', required=False, help="Target SMB user password.")
+    passwords.add_argument('--hidden', dest='hidden', required=False, default=False, action=argparse.BooleanOptionalAction, help='Hide password')
+    #parser.add_argument('-v', '--verbose', dest='verbose', required=False, default=False, action=argparse.BooleanOptionalAction, help='This option will enable the program to be more or less verbose.')
     parser.add_argument('-s', '--share', dest='share', required=False, default=False, help='SMB share name')
 
     args = parser.parse_args()
 
-    if args.verbose:
-        print("[DEBUG] Username: " + args.username)
-        print("[DEBUG] Password: " + args.password)
-        # print("[DEBUG] IP Address: " + args.ip)
-
     con = None # Reset connection
 
+    if args.hidden == True:
+        password = hidden_pass()
+    else:
+        password = args.password
+    
     if args.ip:
         try:
-            con = SMBConnection(args.username, args.password, 'Client', args.ip, is_direct_tcp=True)
+            con = SMBConnection(args.username, password, 'Client', args.ip, is_direct_tcp=True)
             con.connect(args.ip, 445)
             netbios = NetBIOS()
             server_name = netbios.queryIPForName(args.ip, timeout=5000)  # Timeout is in milliseconds
@@ -281,7 +306,7 @@ def main():
             read_target(args.target)
             for host in hosts:
                 if valid_ipv4(host) or valid_ipv6(host) :
-                    con = SMBConnection(args.username, args.password, 'Client', host, is_direct_tcp=True)
+                    con = SMBConnection(args.username, password, 'Client', host, is_direct_tcp=True)
                     con.connect(host, 445)
                     netbios = NetBIOS()
                     server_name = netbios.queryIPForName(host, timeout=5000)  # Timeout is in milliseconds
@@ -313,5 +338,4 @@ if __name__ == "__main__":
 TODO: 
 Add CIDR range scanning functionality.
 Add CSV formatted output per host.clear
-
 '''
