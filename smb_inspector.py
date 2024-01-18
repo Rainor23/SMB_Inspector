@@ -294,7 +294,7 @@ def main():
 
     con = None # Reset connection
 
-    if args.hidden == True:
+    if args.hidden:
         password = hidden_pass()
     else:
         password = args.password
@@ -339,6 +339,7 @@ def main():
                         list_files(con, share_instance)
                     list_dangerous()
                     list_interesting()
+                    csv_parser.write_output(host, found_files, dangerous_files)
                 else:
                     print(f"\n{YELLOW}{host} is not a valid IP address... SKIPPING! {END}")
 
@@ -347,9 +348,31 @@ def main():
 
     elif args.range:
         for ip in IPNetwork(IPNetwork(args.range)):
-            #tbc
-            pass
-        print("Functionality in production")
+            test_smb = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            test_smb.settimeout(1)
+            result1 = test_smb.connect_ex((str(ip), 445))
+            result2 = test_smb.connect_ex((str(ip), 139))
+            test_smb.close()
+            if result1 == 0 or result2 == 0:
+                print(f"Found Share...{ip}")
+                try:
+                    con = SMBConnection(args.username, password, 'Client', str(ip), is_direct_tcp=True)
+                    con.connect(str(ip), 445)
+                    netbios = NetBIOS()
+                    server_name = netbios.queryIPForName(str(ip), timeout=5000)  # Timeout is in milliseconds
+                    print(f"Connected to - {YELLOW}{str(server_name).strip('[]''')}{END}")
+                    list_shares(con)
+                    for share_instance in share_info._share_classes:
+                        print(f"\n{YELLOW}Connecting to {share_instance.name} {END}")
+                        print(f"\n{YELLOW}==========================================={END}")
+                        list_files(con, share_instance)    
+                    list_dangerous()
+                    list_interesting()
+                    csv_parser.write_output(str(ip), found_files, dangerous_files)
+                    
+
+                except Exception as e:
+                    print("Failed to connect or list files\nReason: " + str(e))
 
 if __name__ == "__main__":
     main()
@@ -357,5 +380,4 @@ if __name__ == "__main__":
 '''
 TODO: 
 Add CIDR range scanning functionality.
-Add CSV formatted output per host.clear
 '''
