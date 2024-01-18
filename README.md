@@ -24,11 +24,12 @@ Features:
 Scan single IP's, host files or CIDR ranges.
 Can search for interesting files based of extensions specified.
 Can search for weak file permissions.
+Exports CSV for every found host - allowing for easy reporting.
 
 
 TODO:
-Use Threads for Async tasks. e,g, each host has its own thread.
-Refactor code to reduce the spaghetti and follow OOP.
-Create formatted output that can be exported nicely to CSV for reporting tools.
-Create filters such as -interesting which allows ONLY interesting files to be outputted.
+Use Threads for Async tasks. e,g, each host has its own thread,
+Refactor code to reduce the spaghetti and follow OOP,
+Create formatted output that can be exported nicely to CSV for reporting tools,
+Create filters such as -interesting which allows ONLY interesting files to be outputted,
 Search for folder permissions.
