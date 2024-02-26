@@ -1,5 +1,16 @@
+<br>
+<div align="center">
+  <br>
+  <img src="https://github.com/Rainor23/smb_inspector/assets/45594693/76ca4544-6037-4bba-870d-30862ad8ec03" alt="logo">
+</div>
 
-![logo](https://github.com/Rainor23/smb_inspector/assets/45594693/76ca4544-6037-4bba-870d-30862ad8ec03)
+<br>
+
+<div align="center">
+   <strong>SMB Inspector</strong>: An SMB enumeration tool for finding interesting files and permissions. 
+</div>
+
+<br>
 
 SMB Inspector!
 
