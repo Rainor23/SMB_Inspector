@@ -10,6 +10,10 @@ from netaddr import *
 import socket
 import getpass
 import csv_parser
+import threading
+import logging
+
+
 
 header = '''
   ___ __  __ ___   ___ _  _ ___ ___ ___ ___ _____ ___  ___      
@@ -72,6 +76,12 @@ files_dict = {
 
 }
 
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+
+
 # Makes sure that your password is not saved to terminal so that it cannot be seen in the history file.
 #===========================================
 def hidden_pass():
@@ -86,7 +96,6 @@ dangerous_files = []
 found_files = []
 path_root = "/"
 hosts = []
-
 
 
 # Read Target list
@@ -147,7 +156,6 @@ def list_interesting():
     print (f"--------------------------------")
     for file in found_files:
         print(f'{GREEN}{file}{END}')
-
 
 
 # Recursively search smb shares
@@ -215,7 +223,7 @@ def list_shares(connection):
             name = share.name
             if share.name in ('ADMIN$', 'C$', 'IPC$'):
                 pass
-                print(f"[DEBUG] skipping {name}")
+                logging.info(f"[DEBUG] skipping {name}")
             else:
                 print(f"{GREEN}Found share Name: {name} {END}")
                 class_creation = share_ + name
@@ -223,7 +231,7 @@ def list_shares(connection):
 
             print("------")
     except Exception as e:
-        print(f"Failed to list shares\nReason: {str(e)}")
+        logging.error(f"Failed to list shares\nReason: {str(e)}")
     
 
 
@@ -271,11 +279,11 @@ def list_files(connection, share):
                 recursive_search(connection, share, sub)
 
     except smb.SessionError as e:
-        print(f"SMB SessionError: {e.getErrorCode()}")
-        print(f"Error message: {e.getErrorString()}")
-        print(f"Error packet: {e.getErrorPacket()}")
+        logging.error(f"SMB SessionError: {e.getErrorCode()}")
+        logging.error(f"Error message: {e.getErrorString()}")
+        logging.error(f"Error packet: {e.getErrorPacket()}")
     except Exception as e:
-        print(f"An unexpected error occurred: {str(e)}")
+        logging.error(f"An unexpected error occurred: {str(e)}")
 
 def main():
     parser = argparse.ArgumentParser(description="SMB Recursive File List Script")
@@ -287,11 +295,11 @@ def main():
     parser.add_argument('-u', '--username', dest='username', required=True, help="Target SMB username.")
     passwords.add_argument('-p', '--password', dest='password', required=False, help="Target SMB user password.")
     passwords.add_argument('--hidden', dest='hidden', required=False, default=False, action=argparse.BooleanOptionalAction, help='Hide password')
-    #parser.add_argument('-v', '--verbose', dest='verbose', required=False, default=False, action=argparse.BooleanOptionalAction, help='This option will enable the program to be more or less verbose.')
+    #unfinished yet #parser.add_argument('-v', '--verbose', dest='verbose', required=False, default=False, action=argparse.BooleanOptionalAction, help='This option will enable the program to be more or less verbose.')
     parser.add_argument('-s', '--share', dest='share', required=False, default=False, help='SMB share name')
 
     args = parser.parse_args()
-
+    
     con = None # Reset connection
 
     if args.hidden:
@@ -319,7 +327,7 @@ def main():
             
 
         except Exception as e:
-            print("Failed to connect or list files\nReason: " + str(e))
+            logging.error("Failed to connect or list files\nReason: " + str(e))
 
     elif args.target:
         global hosts
@@ -344,7 +352,7 @@ def main():
                     print(f"\n{YELLOW}{host} is not a valid IP address... SKIPPING! {END}")
 
         except Exception as e:
-            print("Failed to connect or list files\nReason: " + str(e))
+            logging.error("Failed to connect or list files\nReason: " + str(e))
 
     elif args.range:
         for ip in IPNetwork(IPNetwork(args.range)):
@@ -372,12 +380,15 @@ def main():
                     
 
                 except Exception as e:
-                    print("Failed to connect or list files\nReason: " + str(e))
+                    logging.error("Failed to connect or list files\nReason: " + str(e))
 
 if __name__ == "__main__":
     main()
 
+
 '''
 TODO: 
-
+- Threading
+- OOP
+- Adding file extension configs externally in a .json so is more user friendly
 '''
