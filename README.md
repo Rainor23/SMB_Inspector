@@ -39,8 +39,10 @@ Exports CSV for every found host - allowing for easy reporting.
 
 
 TODO:
-Use Threads for Async tasks. e,g, each host has its own thread,
-Refactor code to reduce the spaghetti and follow OOP,
-Create formatted output that can be exported nicely to CSV for reporting tools,
-Create filters such as -interesting which allows ONLY interesting files to be outputted,
-Search for folder permissions.
+- Use Threads for Async tasks. e,g, each host has its own thread
+- Refactor code to reduce the spaghetti and follow OOP
+- Create formatted output that can be exported nicely to CSV for reporting tools, 
+- Create filters such as -interesting which allows ONLY interesting files to be outputted,
+- Search for folder permissions.
+- Intergrate flask and a db to store the data instead of dumping it uysing report generator method
+- Add a bit more information into the html report. Such as showing file permissions for dangerous files.
