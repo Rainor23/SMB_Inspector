@@ -279,6 +279,7 @@ def list_files(connection, share):
         print(f"Error message: {e.getErrorString()}")
         print(f"Error packet: {e.getErrorPacket()}")
     except Exception as e:
+        #print(f"An unexpected error occurred")
         print(f"An unexpected error occurred: {str(e)}")
 
 def main():

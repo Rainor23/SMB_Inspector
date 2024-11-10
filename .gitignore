@@ -2,3 +2,7 @@
 __pycache__/csv_parser.cpython-312.pyc
 __pycache__/report_generator.cpython-312.pyc
 __pycache__/smb_inspector.cpython-312.pyc
+*.txt
+*.html
+*.js
+*.css

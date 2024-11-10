@@ -64,7 +64,7 @@ def generate_report(host):
     read_interesting=read_interesting_found(host)
     chart_interesting_results=read_interesting_found_chart(host)
 
-    html = '''f
+    html = f'''
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -174,7 +174,7 @@ def generate_report(host):
     </div>
     <div class="row">
     <div class="text-center info-pad">
-    1100
+    tba
     </div>
     </div>
     </div>
@@ -211,12 +211,21 @@ def generate_report(host):
     <p class="text-center">
     <strong>Found Dangerous Files</strong>
     </p>
+    <table class="table table-striped">
+    <thead>
+    <tr>
+    <th scope="col">Host</th>
+    <th scope="col">File</th>
+    <th scope="col">Permission</th>
+    </tr>
+    </thead>
     <pre>
     
     '''
 
     html5='''
     </pre>
+    </table>
     </div>
     </div>
     </div>
