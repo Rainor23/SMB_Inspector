@@ -126,7 +126,7 @@ def search_dangerous_perms(file, path, full_path):
             access = hex(perm.mask)[2:].upper()
             if access in permis_dict.keys():
                 files_dict[full_path] = access
-                dangerous_files.append(full_path)
+                dangerous_files.append(f'{full_path}, {permis_dict[access]}')
         else:
             pass
 
@@ -274,10 +274,10 @@ def list_files(connection, share):
             for sub in sub_dir:
                 recursive_search(connection, share, sub)
 
-    except smb.SessionError as e:
-        print(f"SMB SessionError: {e.getErrorCode()}")
-        print(f"Error message: {e.getErrorString()}")
-        print(f"Error packet: {e.getErrorPacket()}")
+#    except smb.SessionError as e:
+#        print(f"SMB SessionError: {e.getErrorCode()}")
+#        print(f"Error message: {e.getErrorString()}")
+#        print(f"Error packet: {e.getErrorPacket()}")
     except Exception as e:
         #print(f"An unexpected error occurred")
         print(f"An unexpected error occurred: {str(e)}")

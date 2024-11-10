@@ -29,9 +29,11 @@ def read_dangerous_found(h):
     with open(f"{h}_dangers.txt", "r") as s:
         lines = s.readlines()[1:]
         for line in lines:
+            stripped = line.replace('"', '')
             result +=f'''   <tr>
-                            <td>{line.split(',')[0]}</td>
-                            <td>{line.split(',')[1]}</td>
+                            <td>{stripped.split(',')[0]}</td>
+                            <td>{stripped.split(',')[1]}</td>
+                            <td>{stripped.split(',')[2]}</td>
                             </tr>'''
     return result
 
