@@ -11,8 +11,9 @@ import re
 from netaddr import *
 import socket
 import getpass
-import csv_parser
 import report_generator
+from Site import app
+from Site import add_share, add_file, add_dangerous, run
 
 header = '''
   ___ __  __ ___   ___ _  _ ___ ___ ___ ___ _____ ___  ___      
@@ -90,8 +91,6 @@ found_files = []
 path_root = "/"
 hosts = []
 
-
-
 # Read Target list
 #===========================================
 def read_target(target):
@@ -119,7 +118,7 @@ def file_permissions(connection, share, path=None):
 
 # Search files for dangerous permissions
 #===========================================
-def search_dangerous_perms(file, path, full_path):
+def search_dangerous_perms(file, path, full_path, share):
     global dangerous_files
     for perm in file.dacl.aces:
         if str(perm.sid) in sids_dict.keys():
@@ -127,6 +126,10 @@ def search_dangerous_perms(file, path, full_path):
             if access in permis_dict.keys():
                 files_dict[full_path] = access
                 dangerous_files.append(f'{full_path}, {permis_dict[access]}')
+                try:
+                    add_dangerous(full_path, permis_dict[access], share)
+                except Exception as e:
+                    print(e)
         else:
             pass
 
@@ -163,31 +166,33 @@ def recursive_search(connection, share, dir):
     print (f"--------------------------------")
     for f in files:
         full_path = share.name + os.path.join(dir,f.filename)
-        search_interesting_extensions(full_path)
+        search_interesting_extensions(full_path, share.name)
         if f.filename not in (".", ".."):
             if f.isDirectory:
                 file_sec = connection.getSecurity(f"{share.name}", f"{dir}/{f.filename}")
-                search_dangerous_perms(file_sec, f.filename, full_path)
+                search_dangerous_perms(file_sec, f.filename, full_path, share.name)
                 sub_dir.append(os.path.join(dir,f.filename))
                 print (f"Directory - {f.filename}")
             else:
                 file_sec = connection.getSecurity(f"{share.name}", f"{dir}/{f.filename}")
-                search_dangerous_perms(file_sec, f.filename, full_path)
+                search_dangerous_perms(file_sec, f.filename, full_path, share.name)
                 print (f"File - {dir}/{f.filename}")
     for sub in sub_dir:            
         recursive_search(connection, share, sub)
 
-
-
 # List of all file extensions to look for
 #===========================================
-def search_interesting_extensions(file):
+def search_interesting_extensions(file, share):
     dangerous_file_extensions = ['.ps1', '.bat', '.cmd', '.sh', '.vbs', '.js', '.jar', '.py', '.com', '.pif', '.vb', '.scr', '.ws', '.wsh', '.msc',  '.reg', '.jar', '.app', '.ade', '.adp', '.lnk', '.vhd']
     sensitive_file_extensions = ['.doc', '.docx', '.xls', '.xlsx', '.pdf', '.txt', '.csv', '.log', '.xml', '.json', '.sql', '.config', '.ini', '.env', '.key', '.pem', '.cer', '.pfx', '.p12', '.private', '.pub', '.ssh', '.backup', '.bak', '.db', '.mdb', '.sqlite', '.dbf', '.csv']
     all_dangerous_extensions = dangerous_file_extensions + sensitive_file_extensions
     extension = '.' + file.split('.')[-1].lower()
     if extension in all_dangerous_extensions:
         found_files.append(file)
+        try:
+            add_file(file, share)
+        except Exception as e:
+            print(e)
 
 
 
@@ -202,8 +207,6 @@ class share_info:
         self.files = [files]
         self.interesting_files = []
         self._share_classes.append(self)
-
-
 
 # List shares found on the remote host
 #===========================================
@@ -224,6 +227,8 @@ def list_shares(connection):
                 class_creation = share_ + name
                 class_creation = share_info(name)
                 found_shares.append(share.name)
+        for i in found_shares:
+            add_share(i)
 
             print("------")
     except Exception as e:
@@ -261,15 +266,15 @@ def list_files(connection, share):
                 for f in files:
                     full_path = share.name + os.path.join(path,f.filename)
                     if f.filename not in (".", ".."):
-                        search_interesting_extensions(full_path)
+                        search_interesting_extensions(full_path, share.name)
                         if f.isDirectory:
                             file_sec = connection.getSecurity(f"{share.name}", f"{path}/{f.filename}")
-                            search_dangerous_perms(file_sec, f.filename, full_path)
+                            search_dangerous_perms(file_sec, f.filename, full_path, share.name)
                             sub_dir.append(os.path.join(p,f.filename))
                             print (f"Directory - {f.filename}")
                         else:
                             file_sec = connection.getSecurity(f"{share.name}", f"{path}/{f.filename}")
-                            search_dangerous_perms(file_sec, f.filename, full_path)
+                            search_dangerous_perms(file_sec, f.filename, full_path, share.name)
                             print (f"File - {p}/{f.filename}")
             for sub in sub_dir:
                 recursive_search(connection, share, sub)
@@ -279,8 +284,8 @@ def list_files(connection, share):
 #        print(f"Error message: {e.getErrorString()}")
 #        print(f"Error packet: {e.getErrorPacket()}")
     except Exception as e:
-        #print(f"An unexpected error occurred")
-        print(f"An unexpected error occurred: {str(e)}")
+        print(f"An unexpected error occurred")
+        #print(f"An unexpected error occurred: {str(e)}")
 
 def main():
     parser = argparse.ArgumentParser(description="SMB Recursive File List Script")
@@ -320,11 +325,12 @@ def main():
             for share_instance in share_info._share_classes:
                 print(f"\n{YELLOW}Connecting to {share_instance.name} {END}")
                 print(f"\n{YELLOW}==========================================={END}")
-                list_files(con, share_instance)    
+                list_files(con, share_instance)
             list_dangerous()
             list_interesting()
-            csv_parser.write_output(args.ip, found_files, dangerous_files, found_shares)
-            report_generator.generate_report(args.ip)
+
+            #csv_parser.write_output(args.ip, found_files, dangerous_files, found_shares)
+            #report_generator.generate_report(args.ip)
             
 
         except Exception as e:
@@ -348,7 +354,6 @@ def main():
                         list_files(con, share_instance)
                     list_dangerous()
                     list_interesting()
-                    csv_parser.write_output(args.ip, found_files, dangerous_files, found_shares)
                 else:
                     print(f"\n{YELLOW}{host} is not a valid IP address... SKIPPING! {END}")
 
@@ -377,17 +382,10 @@ def main():
                         list_files(con, share_instance)    
                     list_dangerous()
                     list_interesting()
-                    csv_parser.write_output(args.ip, found_files, dangerous_files, found_shares)
-
-                    
 
                 except Exception as e:
                     print("Failed to connect or list files\nReason: " + str(e))
 
 if __name__ == "__main__":
     main()
-
-'''
-TODO: 
-
-'''
+    run.apprun()
