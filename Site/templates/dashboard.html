@@ -1,0 +1,231 @@
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMB Inspector Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <link href="../static/styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    </head>
+    <nav class="navbar shadow navbar-expand-sm bg-dark navbar-dark">
+    <div class="container-fluid">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    <ul class="navbar-nav">
+    <li class="nav-item">
+    <a class="nav-link">Dashboard</a>
+    </li>
+    </li>    
+    </ul>
+    </div>
+    </div>
+    </nav>
+    <body class="background">
+    <div class="container-fluid">
+    <div class="row">
+    <!-- Sidebar -->
+    <div class="p-3 bordered-col shadow sidebar-bg text-center" id="sidebar-wrapper">
+    <a class="text-center" href="#">
+    <img src="https://github.com/Rainor23/smb_inspector/assets/45594693/76ca4544-6037-4bba-870d-30862ad8ec03" weidht="80" height="80" class="rounded-circle text-center" alt="">
+    </a>
+    <h4 class="">SMB Inspector Dashboard</h4>
+    <hr>
+    <ul class="nav nav-pills flex-column" id="hostList">
+    <li class="nav-link"><i class='fas fa-eye Icon-colour m-2'></i><a href="#Overview">Overview</a></li>
+    <li class="nav-link"><i class='fas fa-exclamation Icon-colour m-2'></i><a href="#dangerous">Dangerous</a></li>
+    <li class="nav-link"><i class='fas fa-fingerprint Icon-colour m-2'></i><a href="#interesting">Interesting</a></li>
+    </ul>
+    </div>
+    <!-- Main content -->
+    <div class="col content-main">
+    <div class="row">
+    <div class="col p-2">
+    <h1 class="display-4"></h1>
+    <hr>
+    </div>
+    </div>
+    <div class="row">
+    <h2 class="fw-bold" id="Overview">Host Overview</h2>
+    </div>
+    <div class="row">
+    <div class="col-12 col-sm-6 col-md-3">
+    <div class="p-3 bordered-col bg-white shadow rounded hosts-bg">
+    <div class="row">
+    <div class="col ">
+    <span class="summary-box">
+        <i class='fas fas fa-user-secret icon m-2' style="font-size:36px;"></i>
+    </span>
+    </div>
+    <div class="col fw-bold">
+        Interesting files         
+    </div>
+    </div>
+    <div class="row">
+    <div class="text-center info-pad">
+    {{ interesting_count }}
+    </div>
+    </div>
+    </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+    <div class="p-3 bordered-col bg-white shadow rounded hosts-bg">
+    <div class="row">
+    <div class="col ">
+    <span class="summary-box">
+    <i class='fas fa-exclamation-triangle icon m-2' style="font-size:36px;"></i>
+    </span>
+    </div>
+    <div class="col fw-bold">
+    Dangerous files         
+    </div>
+    </div>
+    <div class="row">
+    <div class="text-center info-pad">{{ dangerous_count }}</div>
+    </div>
+    </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+    <div class="p-3 bordered-col bg-white shadow rounded hosts-bg">
+    <div class="row">
+    <div class="col ">
+    <span class="summary-box">
+    <i class='fas fa-file-alt icon m-2' style="font-size:36px;"></i>
+    </span>
+    </div>
+    <div class="col fw-bold">
+    Total files         
+    </div>
+    </div>
+    <div class="row">
+    <div class="text-center info-pad">
+    tba
+    </div>
+    </div>
+    </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+    <div class="p-3 bordered-col bg-white shadow rounded hosts-bg">
+    <div class="row">
+    <div class="col ">
+    <span class="summary-box">
+    <i class='fas fa-laptop-house icon m-2' style="font-size:36px;"></i>
+    </span>
+    </div>
+    <div class="col fw-bold">
+    Shares scanned         
+    </div>
+    </div>
+    <div class="row">
+    <div class="text-center info-pad">{{share_scan_count}}</div>
+    </div>
+    </div>
+    </div>
+    </div>
+    <div class="row">
+    <div class="col p-3 bordered-col bg-white shadow rounded files-bg m-2">
+    <div class="card">
+    <div class="card-header">
+    <h5 class="card-title">Dangerous Files</h5>
+    </div>
+    <div class="card-body">
+    <div class="row">
+    <div class="col-md-8 results-bg">
+    <p class="text-center">
+    <strong>Found Dangerous Files</strong>
+    </p>
+    <table class="table table-striped">
+    <thead>
+    <tr>
+    <th scope="col">Host</th>
+    <th scope="col">File</th>
+    <th scope="col">Permission</th>
+    </tr>
+    </thead>
+    <pre>
+    <tr> {% for file in list_dangerous %}
+    <td> {{ file.smb_share_name}} </td>
+    <td> {{ file.path }} </td>
+    <td> {{ file.dangerous_permission }} </td>
+    </tr> {% endfor %}
+    </pre>
+    </table>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    <div class="row">
+    <div class="col p-3 bordered-col bg-white shadow rounded files-bg m-2">
+    <div class="card">
+    <div class="card-header">
+    <h5 class="card-title">Interesting Files</h5>
+    </div>
+    <div class="card-body">
+    <div class="row">
+    <div class="col-md-8 results-bg">
+    <p class="text-center">
+    <strong>Found Interesting Files</strong>
+    </p>
+    <table class="table table-striped" id="interesting-files-table">
+    <thead>
+    <tr>
+    <th scope="col">Host</th>
+    <th scope="col">File</th>
+    </tr>
+    </thead>
+    <pre>
+    <tr> {% for file in list_interesting %}
+    <td> {{ file.smb_share_name}} </td>
+    <td> {{ file.path }} </td>
+    </tr> {% endfor %}
+    </pre>
+    </table>
+    </div>
+    <div class="col-md-4">
+        <p class="text-center">
+            <strong>Found File Extensions</strong>
+        </p>
+        <canvas id="myChart"></canvas>
+    </div>
+    <script src="chart-data.js"></script>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    <script>
+    function selectHost(element) {
+    // Remove 'active' class from all links
+    document.querySelectorAll('.nav-link').forEach(link => {
+    link.classList.remove('active');
+    });
+
+    // Add 'active' class to the clicked link
+    element.classList.add('active');
+    }
+    </script>
+    <script>
+    $(document).ready(function() {
+    $("#menu-toggle").click(function(e) {
+    e.preventDefault();
+    $("#sidebar-wrapper").toggleClass("toggled");
+    });
+    });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../static/chart-data.js"></script>
+    </body>
+    </html>
+    

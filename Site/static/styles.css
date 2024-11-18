@@ -1,0 +1,111 @@
+
+    :root {
+        --font-family-sans-serif: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+
+    body {
+        overflow-x: hidden;
+        overflow-y: scroll;
+        font-family: var(--font-family-sans-serif);
+    }
+
+    /* Custom styles */
+    .background {
+        background-color: #e6e6e6;
+    }
+    .nav-colour {
+        background-color: #6F7871;
+    }
+    .Icon-colour {
+        color: #F0F1EE;
+    }
+    .nav-pills {
+        color: #F0F1EE;
+    }
+
+    #hostList a {
+        cursor: pointer;
+    }
+    .pre {
+        position: relative; /* Ensures the <pre> tag is positioned relative to .scrollable-pre */
+        overflow-y: auto;   /* Enable scrolling within the <pre> itself */
+    }
+    .bordered-col {
+        padding: 10px;
+        margin-bottom: 20px; /* Space between sections */
+    }
+    .boarder {
+        border: 2px solid #1d3557; /* Bootstrap's border color for consistency */
+    }
+    .hosts-bg, .results-bg {
+        max-height: 600px; /* Maximum height before scrolling */
+        overflow-y: auto; /* Allows scrolling within the sidebar if content is too long */
+    }
+    .files-bg{
+        max-height: 650px; /* Maximum height before scrolling */
+        overflow-y: hidden;
+    }
+    .prescroll {
+        overflow-y: auto;   /* Enables vertical scrolling within the <pre> */
+        position: relative; /* Ensures positioning is relative to the .hosts-bg container */
+    }
+    .sidebar-bg a {
+        color: #F0F1EE !important; /* Ensures all links are white */
+        text-decoration: none !important; /* Removes underline from links */
+    }
+    .sidebar-bg a:hover {
+        padding-left: 20px; /* Slight indentation on hover */
+        transition: all 0.3s ease-in-out; /* Smooth transition for hover effects */
+        text-decoration: none !important; /* Removes underline from links */
+    }
+    .nav-link {
+        padding: 10px 15px; /* More padding for each link */
+        font-size: 16px; /* Larger font size for better readability */
+        
+    }
+    .sidebar-heading {
+        padding: 15px 15px 10px; /* Adjust padding for the heading */
+        border-bottom: 1px solid #475569; /* Adds a subtle border under the heading for separation */
+        margin-bottom: 10px; /* Spacing after the heading */
+    }
+    .sidebar-bg {
+        background-color: #2C3432; /* A dark, soothing background color */
+        min-height: 100vh; /* Ensures the sidebar extends to the full height of the viewport */
+        position: fixed; /* Position fixed relative to the viewport */
+        width: 200px;
+        top: 0;
+        color: #F0F1EE;
+    }
+    .active {
+        background-color: #dee2e6; /* A distinct background color for active link */
+        color: #ffffff; /* White text color for better contrast */
+        padding-left: 30px; /* Increased padding for emphasis */
+        border-radius: 5px; /* Optional: rounded corners for aesthetic */
+        transition: padding 0.3s ease; /* Smooth transition for padding changes */
+        text-decoration: none !important; /* Removes underline from links */
+    }
+    .fit-image {
+        object-fit: cover;
+    }
+    .content-main {
+        margin-left: 200px;
+    }
+    .navbar {
+        margin-left: 200px;
+        
+    }
+    .fa-exclamation-triangle {
+        color: red;
+    }
+    .info-pad {
+        padding-top: 5px;
+        font-size:x-large;
+    }
+    .DivWithScroll{
+    overflow:scroll;
+    overflow-x:hidden;
+    }
+    .Divheight{
+    height: 300px;
+    }
+    
