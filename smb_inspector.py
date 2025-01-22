@@ -2,7 +2,7 @@
 
 from smb.SMBConnection import SMBConnection
 from smb.security_descriptors import ACE_TYPE_ACCESS_ALLOWED, ACE_TYPE_ACCESS_DENIED, SID_CREATOR_OWNER, SID_CREATOR_GROUP
-from impacket import smb
+#from impacket import smb
 import argparse
 import os
 from nmb.NetBIOS import NetBIOS
