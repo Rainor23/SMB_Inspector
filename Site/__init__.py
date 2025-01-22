@@ -4,7 +4,6 @@ app = Flask(__name__)
 
 DB_NAME = str(input("Type name for database: "))
 
-app.config['SECRET_KEY']  = 'Smbtestingletsgo'
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}.db'
 db = SQLAlchemy()
 

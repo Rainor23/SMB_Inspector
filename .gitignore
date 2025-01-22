@@ -6,3 +6,5 @@ __pycache__/*
 *.txt
 report.html
 .instance/*
+*.db
+*.pyc
