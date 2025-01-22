@@ -46,3 +46,6 @@ TODO:
 - Search for folder permissions.
 - Intergrate flask and a db to store the data instead of dumping it uysing report generator method
 - Add a bit more information into the html report. Such as showing file permissions for dangerous files.
+
+Current Bugs
+ - Sometimes running SMB_Inspector from a docker container, duplicates output results.

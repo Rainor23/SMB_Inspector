@@ -7,4 +7,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5000
 
-CMD ["python", "smb_inspector.py"]
+# Ammend the python arguments here
+CMD ["python", "smb_inspector.py", "-i", "<IP>", "-v", "-u", "<USERNAME>", "--hidden"]

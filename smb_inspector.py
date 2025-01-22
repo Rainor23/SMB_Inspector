@@ -76,6 +76,7 @@ files_dict = {
 
 }
 
+
 # Makes sure that your password is not saved to terminal so that it cannot be seen in the history file.
 #===========================================
 def hidden_pass():
